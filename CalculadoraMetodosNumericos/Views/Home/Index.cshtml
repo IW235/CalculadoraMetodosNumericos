@@ -1,0 +1,305 @@
+﻿@model BiseccionViewModel
+@{
+    ViewData["Title"] = "Método de Bisección"; 
+
+    var iteracionesJson = Json.Serialize(Model?.IteracionesDetalle ?? new List<BiseccionViewModel.IteracionBiseccion>());
+}
+
+<div class="container mt-4">
+    <h2 class="text-center mb-4">Calculadora del Método de Bisección</h2>
+
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title text-primary">Parámetros</h5>
+                    <form asp-controller="Home" asp-action="Calcular" lang="en-US" method="post">
+                        <div class="mb-3">
+                            <label class="form-label">Función f(x):</label>
+                            <input type="text" class="form-control" name="Funcion" value="@(Model?.Funcion ?? "x^2 - 4")" required />
+                            <div class="form-text text-muted">
+                                Ejemplo: ln(x^2+1) - e^(x/2)*cos(pi*x)
+                                </div>
+                        </div>
+                        <div class="row">
+                            <div class="col">
+                                <label class="form-label">a</label>
+                                <input type="text" class="form-control" name="A" value="@(Model?.A ?? "0")" required />
+                            </div>
+                            <div class="col">
+                                <label class="form-label">b</label>
+                                <input type="text" class="form-control" name="B" value="@(Model?.B ?? "3")" required />
+                            </div>
+                        </div>
+                        <div class="mb-3 mt-3">
+                            <label class="form-label">Tolerancia</label>
+                            <input type="text"  class="form-control" name="Tolerancia" value="@(Model?.Tolerancia ?? "0.01")" required />
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100" id="btnCalcular">
+                            Calcular
+                        </button>
+                        <script>
+                            document.querySelector("form").addEventListener("submit", function () {
+                                const btn = document.getElementById("btnCalcular");
+                                btn.innerText = "Calculando...";
+                                btn.disabled = true;
+                            });
+                            </script>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            @if (Model != null && Model.RaizEncontrada)
+            {
+                <div class="alert alert-success shadow-sm text-center">
+                    <h4>Raíz Encontrada</h4>
+                    <h2 class="fw-bold">@Model.Raiz</h2>
+                    <p>Iteraciones: @Model.Iteraciones</p>
+                </div>
+            }
+            else if (Model != null && !string.IsNullOrEmpty(Model.Error))
+            {
+                <div class="alert alert-danger shadow-sm" role="alert">
+                    <strong>Error matemático:</strong> @Model.Error
+                </div>
+            }
+
+            <!--Grafica -->
+            <div class="card shadow-sm mt-3">
+                <div class="card-body">
+                    <canvas id="graficaBiseccion"></canvas>
+                </div>
+            </div>
+
+            <!-- Control de animaciones -->
+            <div class="card shadow-sm mt-3">
+                <div class="card-body text-center">
+
+                    <h5>Animación del Método</h5>
+
+                    <p id="infoIteracion" class="fw-bold">
+                        Iteración: 0
+                    </p>
+
+                    <div class="d-flex justify-content-center gap-2">
+                        <button id="btnPlay" class="btn btn-success">▶️ Play</button>
+                        <button id="btnPause" class="btn btn-warning">⏸️ Pause</button>
+                        <button id="btnReset" class="btn btn-secondary">🔄 Reset</button>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="mt-3">
+                <label class="form-label">⚡ Velocidad</label>
+                <input type="range" id="speedControl" min="100" max="2000" step="100" value="800" class="form-range">
+
+                <small id="speedLabel">800 ms</small>
+            </div>
+
+            <!--Tabla de Iteración -->
+            @if (Model != null && Model.IteracionesDetalle != null && Model.IteracionesDetalle.Any())
+            {
+                <div class="card shadow-sm mt-3">
+                    <div class="card-body">
+                        <h5 class="card-title">Tabla de Iteraciones</h5>
+
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-sm text-center">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Iter</th>
+                                        <th>a</th>
+                                        <th>b</th>
+                                        <th>c</th>
+                                        <th>f(a)</th>
+                                        <th>f(b)</th>
+                                        <th>f(c)</th>
+                                       <!-- <th>Error</th> -->
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var item in Model.IteracionesDetalle)
+                                    {
+                                        <tr>
+                                            <td>@item.Iteracion</td>
+                                            <td>@item.A</td>
+                                            <td>@item.B</td>
+                                            <td>@item.C</td>
+                                            <td>@item.Fa</td>
+                                            <td>@item.Fb</td>
+                                            <td>@item.Fc</td>
+                                         @* <td>@item.Error</td> *@
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script>
+        // ===============================
+        // Datos traidos desde la vista Razor 
+        // ===============================
+
+        const raizEncontrada = @(Model?.RaizEncontrada.ToString().ToLower() ?? "false");
+        const valoresX = @Html.Raw(Json.Serialize(Model?.ValoresX ?? new List<double>()));
+        const valoresY = @Html.Raw(Json.Serialize(Model?.ValoresY ?? new List<double>()));
+        const raizX = @Html.Raw(Model?.Raiz.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "0");
+        const iteraciones = @Html.Raw(iteracionesJson);
+        const speedControl = document.getElementById("speedControl");
+        const speedLabel = document.getElementById("speedLabel");
+
+        // ===============================
+        //Gráfica y animación 
+        // ===============================
+
+        if (raizEncontrada && valoresX.length > 0) {
+
+            const ctx = document.getElementById('graficaBiseccion').getContext('2d');
+
+            let chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    datasets: [
+                        {
+                            label: 'f(x)',
+                            data: valoresX.map((x, i) => ({ x: x, y: valoresY[i] })),
+                            borderColor: '#0d6efd',
+                            borderWidth: 2,
+                            fill: false,
+                            pointRadius: 0
+                        },
+                        {
+                            label: 'Intervalo [a, b]',
+                            data: [],
+                            borderColor: '#ffc107',
+                            borderWidth: 3,
+                            pointRadius: 5,
+                            showLine: true
+                        },
+                        {
+                            label: 'Punto medio (c)',
+                            data: [],
+                            backgroundColor: '#dc3545',
+                            type: 'scatter',
+                            pointRadius: 6
+                        },
+                        {
+                            label: 'Raíz final',
+                            data: [{ x: raizX, y: 0 }],
+                            backgroundColor: '#198754',
+                            type: 'scatter',
+                            pointRadius: 6
+                        }
+                    ]
+                },
+                options: {
+                    animation: false,
+                    responsive: true,
+                    scales: {
+                        x: { type: 'linear', position: 'bottom' },
+                        y: {
+                            grid: {
+                                color: (context) =>
+                                    context.tick.value === 0 ? '#000' : '#e5e5e5'
+                            }
+                        }
+                    }
+                }
+            });
+
+            // ===============================
+            // animación 
+            // ===============================
+
+            let i = 0;
+            let interval = null;
+            let velocidad = 800;
+
+            const info = document.getElementById("infoIteracion");
+            const btnPlay = document.getElementById("btnPlay");
+            const btnPause = document.getElementById("btnPause");
+            const btnReset = document.getElementById("btnReset");
+
+            function pasoAnimacion() {
+                if (!iteraciones || i >= iteraciones.length) {
+                    clearInterval(interval);
+                    return;
+                }
+                
+                let it = iteraciones[i];
+                
+                if (!it) return;
+                
+                // Intervalo
+                chart.data.datasets[1].data = [
+                    { x: it.a, y: 0 },
+                    { x: it.b, y: 0 }
+                ];
+                // Punto medio
+                chart.data.datasets[2].data = [
+                    { x: it.c, y: it.fc }
+                ];
+                
+                // Validaciones 
+                if (it.a !== undefined && it.b !== undefined && it.c !== undefined) {
+                    info.innerHTML = `
+                    Iteración: ${it.iteracion} <br>
+                    a=${it.a.toFixed(4)} | b=${it.b.toFixed(4)} | c=${it.c.toFixed(4)}
+                    `;
+                }
+                
+                chart.update();
+          
+                i++;
+            }
+
+            btnPlay.addEventListener("click", () => {
+                if (interval) return;
+                interval = setInterval(pasoAnimacion, velocidad);
+            });
+
+            btnPause.addEventListener("click", () => {
+                clearInterval(interval);
+                interval = null;
+            });
+
+            btnReset.addEventListener("click", () => {
+                clearInterval(interval);
+                interval = null;
+                i = 0;
+
+                chart.data.datasets[1].data = [];
+                chart.data.datasets[2].data = [];
+
+                info.innerHTML = "Iteración: 0";
+
+                chart.update();
+            });
+
+             speedControl.addEventListener("input", (e) => {
+
+            velocidad = parseInt(e.target.value);
+            speedLabel.innerText = velocidad + " ms";
+
+            //Reiniciar el intervalo con una nueva velocidad
+            if (interval) {
+                clearInterval(interval);
+                interval = setInterval(pasoAnimacion, velocidad);
+            }
+        });
+
+        }
+    </script>
+}
