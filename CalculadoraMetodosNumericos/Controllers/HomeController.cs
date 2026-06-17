@@ -24,8 +24,8 @@ namespace CalculadoraMetodosNumericos.Controllers
             double a, b, tol;
 
             // ============================================
-            // 1. Validación de los datos y conversion de estos
-            //Se valida que solo los datos que acepta la aplicación lleguen al calculo. 
+            // 1. Validaciï¿½n de los datos y conversion de estos
+            //Se valida que solo los datos que acepta la aplicaciï¿½n lleguen al calculo. 
             // ===========================================
 
             if (!TryParseDouble(model.A, out a))
@@ -52,12 +52,12 @@ namespace CalculadoraMetodosNumericos.Controllers
                 double fb = Evaluar(model.Funcion, b);
 
                 // ======================================
-                // 2. Validación del metodo de Biseccion , que todos los datos ingresados sean correctos
+                // 2. Validaciï¿½n del metodo de Biseccion , que todos los datos ingresados sean correctos
                 // y se pueda proceder a realizar el calclulo 
                 // ======================================
                 /*if (fa * fb >= 0)
                 {
-                    model.Error = "La función debe tener signos opuestos en f(a) y f(b).";
+                    model.Error = "La funciï¿½n debe tener signos opuestos en f(a) y f(b).";
                     model.RaizEncontrada = false;
                     return View("Index", model);
                 }*/
@@ -70,7 +70,7 @@ namespace CalculadoraMetodosNumericos.Controllers
                 }
 
                 // ===============================
-                // 3. Método de Bisección
+                // 3. Mï¿½todo de Bisecciï¿½n
                 // Aqui se comienza a realizar los calculos 
                 // ===============================
                 double c = a;
@@ -83,7 +83,7 @@ namespace CalculadoraMetodosNumericos.Controllers
 
                     double fc = Evaluar(model.Funcion, c);
 
-                    // Sección para guardar las iteraciones
+                    // Secciï¿½n para guardar las iteraciones
                     model.IteracionesDetalle.Add(new IteracionBiseccion
                     {
                         Iteracion = it + 1,
@@ -118,13 +118,13 @@ namespace CalculadoraMetodosNumericos.Controllers
                 model.RaizEncontrada = true;
 
                 // ===============================
-                // 4. Se genera la gráfica resultante
+                // 4. Se genera la grï¿½fica resultante
                 // ===============================
                 GenerarPuntosGrafica(model, a, b);
             }
             catch (Exception ex)
             {
-                model.Error = "Error en la expresión: " + ex.Message;
+                model.Error = "Error en la expresiï¿½n: " + ex.Message;
                 model.RaizEncontrada = false;
             }
 
@@ -160,11 +160,11 @@ namespace CalculadoraMetodosNumericos.Controllers
                 double fa = Evaluar(model.Funcion, a);
                 double fb = Evaluar(model.Funcion, b);
 
-                //Caso 1: valores no válidos
+                //Caso 1: valores no vï¿½lidos
                 if (double.IsNaN(fa) || double.IsNaN(fb) ||
                     double.IsInfinity(fa) || double.IsInfinity(fb))
                 {
-                    error = "La función no es válida en el intervalo proporcionado.";
+                    error = "La funciï¿½n no es vï¿½lida en el intervalo proporcionado.";
                     return false;
                 }
 
@@ -179,14 +179,14 @@ namespace CalculadoraMetodosNumericos.Controllers
             }
             catch (Exception ex)
             {
-                error = "Error en la función: " + ex.Message;
+                error = "Error en la funciï¿½n: " + ex.Message;
                 return false;
             }
         }
 
 
         // ===============================
-        //Se utiliza la biblioteca  NCalc para evaluar expresiones matemáticas y lógicas
+        //Se utiliza la biblioteca  NCalc para evaluar expresiones matemï¿½ticas y lï¿½gicas
         // ===============================
         private double Evaluar(string formula, double x)
         {
@@ -197,7 +197,7 @@ namespace CalculadoraMetodosNumericos.Controllers
             //string formulaProcesada = formula.ToLower();
             string f = formula.ToLower();
 
-            //==== Limpieza de caracteres extraños ===== 
+            //==== Limpieza de caracteres extraï¿½os ===== 
             f = f.Replace("?", "");
 
             //==== Soporte para ? ===== 
@@ -212,7 +212,7 @@ namespace CalculadoraMetodosNumericos.Controllers
                 "Pow($1,$2)"
             ); */
 
-            //======= Multiplicación implícita
+            //======= Multiplicaciï¿½n implï¿½cita
             //  4x ? 4*x
             f = System.Text.RegularExpressions.Regex.Replace(f, @"(\d)(x)", "$1*$2");
             /*formulaProcesada = Regex.Replace(
@@ -240,7 +240,7 @@ namespace CalculadoraMetodosNumericos.Controllers
             f = f.Replace("x", $"({xVal})");
             // formulaProcesada = formulaProcesada.Replace("x", $"({xVal})");
 
-            // ===========Crear la expresión para NCalc  =========================
+            // ===========Crear la expresiï¿½n para NCalc  =========================
             Expression e = new Expression(f);
 
             //Funciones personalizadas
@@ -285,7 +285,7 @@ namespace CalculadoraMetodosNumericos.Controllers
                         break;
 
                     default:
-                        throw new Exception($"Función '{name}' no soportada");
+                        throw new Exception($"Funciï¿½n '{name}' no soportada");
                 }
             };
 
@@ -315,7 +315,7 @@ namespace CalculadoraMetodosNumericos.Controllers
         }
 
         // ===============================
-        //  Método para generar la gráfica 
+        //  Mï¿½todo para generar la grï¿½fica 
         // ===============================
         private void GenerarPuntosGrafica(BiseccionViewModel model, double a, double b)
         {
@@ -335,7 +335,7 @@ namespace CalculadoraMetodosNumericos.Controllers
                 }
                 catch 
                 {
-                   
+
                 }
             }
         }
