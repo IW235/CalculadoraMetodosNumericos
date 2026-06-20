@@ -1,3 +1,4 @@
+// Proyecto actualizado por Luisangely Mora
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -30,12 +31,14 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+// Configuración de archivos estáticos
 app.UseStaticFiles();
 
 app.UseRouting();
 
 app.UseAuthorization();
 
+// Configuración de la ruta principal de la aplicación
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
